@@ -54,7 +54,7 @@ impl Evaluator {
 
 #[derive(Clone, Copy, Debug)]
 pub struct EvaluationResult {
-    pub char_results: [CharResult; 5],
+    char_results: [CharResult; 5],
 }
 
 impl EvaluationResult {
@@ -79,6 +79,10 @@ impl EvaluationResult {
         let mut char_results = self.char_results.clone().to_vec();
         char_results.sort_by(|a, b| a.pos.cmp(&b.pos));
         char_results
+    }
+
+    pub fn correct_count(&self) -> u32 {
+    self.char_results.iter().filter(|r| r.is_match()).count() as u32
     }
 }
 
@@ -120,12 +124,19 @@ impl CharResult {
                 }
                 found
             }
-            CharResultType::Noop => true,
         }
     }
 
     pub fn format(&self, emoji: bool) -> String {
         self.result_type.format(self.c, emoji)
+    }
+
+    fn is_match(&self) -> bool {
+        match self.result_type {
+            CharResultType::NotFound => false,
+            CharResultType::Correct => true,
+            CharResultType::WrongSpot => true,
+        }
     }
 }
 
@@ -134,7 +145,6 @@ enum CharResultType {
     NotFound,
     Correct,
     WrongSpot,
-    Noop,
 }
 
 impl CharResultType {
@@ -159,13 +169,6 @@ impl CharResultType {
                     "🟨".to_string()
                 } else {
                     format!("~{}", c)
-                }
-            }
-            CharResultType::Noop => {
-                if emoji {
-                    "⬛".to_string()
-                } else {
-                    format!("-{}", c)
                 }
             }
         }
